@@ -165,29 +165,6 @@ Nginx反向代理
 
 
 
-# 说明
-
->  如果本项目对您有帮助，欢迎 "Star" 支持一下 谢谢~
-
-> `参考的原生微信小程序`  [tumobi/nideshop-mini-program](https://github.com/tumobi/nideshop-mini-program)
-
-
-
-
-# 最后
-
-1、欢迎关注我的公众号，还有个技术交流群(备注自己github账号哦)
-
-### 公众号、技术交流群
-<img src="https://github.com/yllg/xbyjMusic/blob/master/screenshots/13.%E5%85%AC%E4%BC%97%E5%8F%B7.jpg" width="200" height="200"/> <img src="https://github.com/yllg/xbyjMusic/blob/master/screenshots/14.%E5%BE%AE%E4%BF%A1%E7%BE%A4.png" width="250" height="312"/>
-
-2、捐赠 Donate</br>
-如果我的项目对你有帮助，也可以给我打赏一下哦~
-
-### 支付宝和微信支付
-<img src="https://github.com/yllg/xbyjMusic/blob/master/screenshots/15.%E6%94%AF%E4%BB%98%E5%AE%9D.jpg" width="250" height="312"/> <img src="https://github.com/yllg/xbyjMusic/blob/master/screenshots/16.%E5%BE%AE%E4%BF%A1%E6%94%AF%E4%BB%98.png" width="250" height="312"/>
-
-
 # License
 [GPL]
 
