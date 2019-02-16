@@ -1,6 +1,6 @@
 {
-  "name": "xbyjshop",
-  "description": "xbyjshop - open source mini program shop",
+  "name": "buyishop",
+  "description": "buyishop - sell bu shop",
   "version": "1.0.0",
   "scripts": {
     "start": "node development.js",
@@ -20,8 +20,12 @@
     "think-cache": "^1.0.0",
     "think-cache-file": "^1.0.8",
     "think-logger3": "^1.0.0",
+    "think-session-file": "^1.0.5",
+    "think-session": "^1.0.0",
     "think-model": "^1.0.0",
     "think-model-mysql": "^1.0.0",
+    "think-view": "^1.0.0",
+    "think-view-nunjucks": "^1.0.1",
     "thinkjs": "^3.0.0",
     "weixinpay": "^1.0.12",
     "xml2js": "^0.4.19"
@@ -29,12 +33,12 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-preset-think-node": "^1.0.0",
-    "node-notifier": "^5.0.2",
-    "think-watcher": "^3.0.0",
-    "think-inspect": "0.0.2",
-    "think-babel": "^1.0.3",
     "eslint": "^4.2.0",
-    "eslint-config-think": "^1.0.0"
+    "eslint-config-think": "^1.0.2",
+    "node-notifier": "^5.0.2",
+    "think-babel": "^1.0.3",
+    "think-inspect": "0.0.2",
+    "think-watcher": "^3.0.0"
   },
   "repository": "",
   "license": "MIT",

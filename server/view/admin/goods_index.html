@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<title>商品</title>
+		{% include "./header.html" %}
+	</head>
+
+	<body>
+
+		<table id="example2" class="table table-bordered table-striped">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>商品名称</th>
+					<th>所属分类</th>
+					<th>价格</th>
+					<th>销量</th>
+					<th>是否上架</th>
+					<th>操作</th>
+
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+		{% include "./footer.html" %}
+		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">×</span>
+						</button>
+						<h4 class="modal-title" id="myModalLabel">编辑</h4>
+					</div>
+					<div class="modal-body">
+						<div class="form-group">
+							<label for="name">商品名称</label>
+							<input class="form-control" id="title" name="title" placeholder="请输入商品名称">
+						</div>
+						<div class="form-group">
+							<label for="value">商品价格</label>
+							<div class="form-group">
+								<label class="sr-only" for="value">价格</label>
+								<div class="input-group">
+									<div class="input-group-addon">￥</div>
+									<input type="text" class="form-control" id="value" placeholder="价格">
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="category">所属分类</label>
+							<div class="form-group">
+								<input type="text" class="form-control" id="category_name" placeholder="类别ID">
+
+
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="content">商品描述</label>
+							<form>
+								<div class="editor"></div>
+							</form>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+						<button type="button" id="submit" class="btn btn-primary button" edit="">确认更新</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script>
+		$(function() {
+			var E = window.wangEditor;
+			var editor = new E('.editor');
+			editor.create();
+
+			$('#myModal').on('hidden.bs.modal', function () {
+				$('#myModal .form-control').val('');
+				editor.txt.clear();
+			});
+
+			var table = $('#example2').DataTable({
+				'paging': true,
+				"processing": true,
+				'searching': true,
+				'serverSide': true,
+				'ordering': false,
+				'info': true,
+				'autoWidth': true,
+				'ajax':'/admin/goods/brief',
+				"columns": [
+					{"data": "id"},
+					{"data": "name"},
+					{"data": "category_id"},
+					{"data": "retail_price"},
+					{"data": "sell_volume"},
+					{"data": "is_on_sale"}
+				],
+				"columnDefs": [{ //设置 编辑按钮
+					"targets": [6],
+					"data": "id",
+					"render": function(data, type, full) {
+						return "<a class='edit' href='javascript:void(0)' edit='" + data +
+								"'data-toggle='modal' data-target='#myModal' >编辑</a>&nbsp;&nbsp;&nbsp;&nbsp;<a class='del' del='" +
+								data + "'href='javascript:void(0)'>删除</a>";
+					}
+				}],
+				"oLanguage": {
+					"sLengthMenu": "每页显示 _MENU_ 条记录",
+					"sZeroRecords": "对不起，查询不到任何相关数据",
+					"sInfo": "当前显示 _START_ 到 _END_ 条，共 _TOTAL_ 条记录",
+					"sInfoEmtpy": "找不到相关数据",
+					"sInfoFiltered": "数据表中共为 _MAX_ 条记录)",
+					"sProcessing": "正在加载中...",
+					"sSearch": "搜索",
+					"sUrl": "", //多语言配置文件，可将oLanguage的设置放在一个txt文件中，例：Javascript/datatable/dtCH.txt
+					"oPaginate": {
+						"sFirst": "第一页",
+						"sPrevious": " 上一页 ",
+						"sNext": " 下一页 ",
+						"sLast": " 最后一页 "
+					}
+				}, //多语言配置
+			})
+
+			//给行绑定选中事件
+			$('#example2 tbody').on('click', 'tr', function() {
+				if ($(this).hasClass('selected')) {
+					$(this).removeClass('selected');
+				} else {
+					table.$('tr.selected').removeClass('selected');
+					$(this).addClass('selected');
+				}
+			});
+			//删除
+			$("#example2_wrapper").on('click','.del',function() {
+				$.ajax({
+					type: 'post',
+					url: 'http://127.0.0.1:8360/admin/goods/del',
+					data: {
+						"id": $(this).attr("del")
+					},
+					success: function(data) {
+						table.ajax.reload(false);
+						toastr.success('删除成功');
+					},
+					error:function(data){
+						toastr.error('失败！'+data.errmsg);
+					}
+				});
+			})
+
+			//编辑
+			$("#example2_wrapper").on('click','.edit',function() {
+				const id=$(this).attr('edit');
+				//alert(id);
+				$.ajax({
+					type: 'get',
+					url: 'http://127.0.0.1:8360/admin/goods/info',
+					data:{'id':id},
+					success: function(data) {
+
+						$("#title").val(data.name);
+						$("#value").val(data.retail_price);
+						editor.txt.html(data.goods_desc);
+						$("#category_name").val(data.category_id);
+						$("#submit").attr("edit", data.id);
+					},
+					error:function(data) {
+						toastr.error("错误！"+data);
+					}
+				})
+
+			});
+			//编辑更新
+			$("#submit").click(function() {
+				var id = $(this).attr("edit");
+				var title = $("#title").val();
+				var value = $("#value").val();
+				var content = editor.txt.html();
+				var category_name = $("#category_name").val();
+				$.ajax({
+					type: 'post',
+					url: 'http://127.0.0.1:8360/admin/goods/store',
+					data: {
+						"id": id,
+						"name": title,
+						"goods_desc": content,
+						"category_name": category_name,
+						"retail_price": value
+					},
+					success: function(data) {
+							toastr.success('成功！');
+							table.ajax.reload(false);
+						$('#myModal').modal('hide');
+					},
+					error:function(data){
+						toastr.error('失败！'+data);
+					}
+				});
+
+			});
+		})
+	</script>
+
+</html>

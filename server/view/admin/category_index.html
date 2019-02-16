@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>分类</title>
+    {% include "./header.html" %}
+</head>
+
+<body>
+
+<table id="example2" class="table table-bordered table-striped">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>分类名称</th>
+        <th>备注</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+{% include "./footer.html" %}
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabel">编辑</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="name">分类名称</label>
+                    <input class="form-control" id="name" name="name">
+                    <input type="hidden" class="form-control" id="id" name="id">
+                </div>
+                <div class="form-group">
+                    <label for="front_name">备注</label>
+                    <input class="form-control" id="front_name" name="front_name">
+                </div>
+                <div class="form-group">
+                    <label for="front_name">横幅图标</label>
+                    <img src="" id="banner_url" height="50px">
+                </div>
+                <div class="form-group">
+                    <label for="front_name">缩略图标</label>
+                    <img src="" id="wap_banner_url" height="50px">
+                </div>
+                <div class="form-group">
+                    <label for="front_name">type</label>
+                    <select class="form-control">
+                        <option>0</option>
+                        <option>1</option>
+                    </select>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" id="sub" class="btn btn-primary button">确认更新</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+  function tableRf(data) {
+    let table = $('#example2').DataTable();
+    table.clear();
+    table.rows.add(data);
+    table.draw(false);
+    //alert(data);
+  }
+
+  function load() {
+    $.ajax({
+      type: 'get',
+      url: 'http://127.0.0.1:8360/admin/category/brief',
+      success: function(data) {
+        //DataTable
+        tableRf(data.data);
+      },
+      error: function(data) {
+        toastr.error('error' + data);
+      }
+    });
+  }
+
+  $(function() {
+    data = {};
+    var table = $('#example2').DataTable({
+      'paging': true,
+      'lengthChange': false,
+      'searching': true,
+      'ordering': true,
+      'info': true,
+      'autoWidth': true,
+      'data': data,
+      'columns': [
+        {'data': 'id'},
+        {'data': 'name'},
+        {'data': 'front_name'},
+      ],
+      'columnDefs': [{//设置 编辑按钮
+        'targets': [3],
+        'data': 'id',
+        'render': function(data, type, full) {
+          return '<a class=\'edit\' href=\'javascript:void(0)\' edit=\'' + data + '\'data-toggle=\'modal\' data-target=\'#myModal\' >编辑</a>&nbsp;&nbsp;&nbsp;&nbsp;<a class=\'del\' del=\'' + data + '\'href=\'javascript:void(0)\'>删除</a>';
+        }
+      }],
+      'oLanguage': {
+        'sLengthMenu': '每页显示 _MENU_ 条记录',
+        'sZeroRecords': '对不起，查询不到任何相关数据',
+        'sInfo': '当前显示 _START_ 到 _END_ 条，共 _TOTAL_ 条记录',
+        'sInfoEmtpy': '找不到相关数据',
+        'sInfoFiltered': '数据表中共为 _MAX_ 条记录)',
+        'sProcessing': '正在加载中...',
+        'sSearch': '搜索',
+        'sUrl': '', //多语言配置文件，可将oLanguage的设置放在一个txt文件中，例：Javascript/datatable/dtCH.txt
+        'oPaginate': {
+          'sFirst': '第一页',
+          'sPrevious': ' 上一页 ',
+          'sNext': ' 下一页 ',
+          'sLast': ' 最后一页 '
+        }
+      }, //多语言配置
+    });
+
+    load();
+
+    $('#example2 tbody').on('click', 'tr', function() {
+      if ($(this).hasClass('selected')) {
+        $(this).removeClass('selected');
+      } else {
+        table.$('tr.selected').removeClass('selected');
+        $(this).addClass('selected');
+      }
+    });
+    //删除
+    $('.del').click(function() {
+      $.ajax({
+        type: 'post',
+        url: 'http://127.0.0.1:8360/admin/category/del',
+        data: {'id': $(this).attr('del')},
+        success: function(data) {
+          if (data.succ) {
+            alert('删除成功');
+            window.location.reload();
+          } else {
+            alert('删除失败');
+          }
+        }
+      });
+    });
+    //编辑
+    $('#example2').on('click', '.edit', function() {
+      var data1;
+      var id = $(this).attr('edit');
+      //alert(id);
+      $.ajax({
+        type: 'get',
+        url: 'http://127.0.0.1:8360/admin/category/info',
+        data: {'id': id},
+        success: function(data) {
+          data1 = data.data;
+          $('#id').val(data1.id);
+          $('#name').val(data1.name);
+          $('#front_name').val(data1.front_name);
+          $('#banner_url').attr('src', data1.banner_url);
+          $('#wap_banner_url').attr('src', data1.wap_banner_url);
+        },
+        error: function(data) {
+          toastr.error('失败！' + data);
+        }
+      });
+
+    });
+
+    //编辑更新
+    $('#sub').click(function() {
+      //var table = $('#example2').DataTable();
+      var name = $('#name').val();
+      var front_name = $('#front_name').val();
+      var id = $('#id').val();
+      $.ajax({
+        type: 'post',
+        url: 'http://127.0.0.1:8360/admin/category/store',
+        data: {'name': name, 'front_name': front_name, 'id': id},
+        success: function(data1) {
+          //alert("ok");
+          load();
+          toastr.success('成功！');
+          $('#myModal').modal('hide');
+
+        },
+        error: function(data) {
+          toastr.error('失败！' + data);
+        }
+      });
+    });
+
+  });
+
+</script>
+
+</html>

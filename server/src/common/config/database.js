@@ -4,10 +4,11 @@ module.exports = {
   handle: mysql,
   database: 'xbyjshop',
   prefix: 'xbyjshop_',
-  encoding: 'utf8mb4',
+  encoding: 'utf8',
   host: '127.0.0.1',
   port: '3306',
   user: 'root',
-  password: '',
-  dateStrings: true
+  password: '134679852',
+  dateStrings: true,
+  pageSize: 20,
 };

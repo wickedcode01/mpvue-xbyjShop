@@ -16,16 +16,15 @@ export default {
   // 这个字段走 app.json
   config: {
     pages: [
-      'pages/index/index',
-      'pages/topic/topic',
-      'pages/catalog/catalog',
+      '^pages/index/index',
+      'pages/goods/goods',
       'pages/cart/cart',
-      'pages/ucenter/index'
+      'pages/shopping/checkout'
     ], // Will be filled in webpack
     window: {
       backgroundTextStyle: 'dark',
       navigationBarBackgroundColor: '#fff',
-      navigationBarTitleText: 'xbyj商城',
+      navigationBarTitleText: '布艺商城',
       navigationBarTextStyle: 'black',
       'enablePullDownRefresh': true
     },
@@ -65,7 +64,8 @@ export default {
         'text': '我的'
       }
       ]
-    }
+    },
+    enablePullDownRefresh: true,
   },
   'networkTimeout': {
     'request': 10000,

@@ -76,7 +76,7 @@ module.exports = class extends Base {
   }
 
   /**
-   * 提交订单
+   * 购物车提交订单
    * @returns {Promise.<void>}
    */
   async submitAction() {
@@ -168,5 +168,17 @@ module.exports = class extends Base {
     }
     const latestExpressInfo = await this.model('order_express').getLatestOrderExpress(orderId);
     return this.success(latestExpressInfo);
+  }
+
+  async cancelAction(){
+    const orderId= await this.get('orderId');
+    const msg=await this.model('order').updateOrderStatus(orderId,101);
+    if(msg){
+      console.log('msg');
+      return this.success();
+    }
+    else {
+      return this.fail();
+    }
   }
 };

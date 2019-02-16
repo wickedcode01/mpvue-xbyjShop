@@ -7,9 +7,9 @@
 		"minified": false,
 		"newFeature": true
 	},
-	"miniprogramRoot": "./dist/",
+	"miniprogramRoot": "dist/",
 	"compileType": "miniprogram",
-	"appid": "",
+	"appid": "wxeb1b06c92a069915",
 	"projectname": "mpvue-xbyjShop",
 	"condition": {
 		"search": {

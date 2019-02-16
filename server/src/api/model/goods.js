@@ -50,4 +50,9 @@ module.exports = class extends think.Model {
 
     return specificationList;
   }
+
+  async getPrice(goodsId,productsId){
+    const price=await this.model('product').field('retail_price').where({id:productsId,goods_id:goodsId}).select();
+    return price;
+  }
 };

@@ -23,7 +23,7 @@ module.exports = class extends Base {
       // 查找商品的图片
       cartItem.list_pic_url = await this.model('goods').where({id: cartItem.goods_id}).getField('list_pic_url', true);
     }
-
+    // console.log(cartList);
     return {
       cartList: cartList,
       cartTotal: {
@@ -231,10 +231,13 @@ module.exports = class extends Base {
   async checkoutAction() {
     const addressId = this.get('addressId'); // 收货地址id
     // const couponId = this.get('couponId'); // 使用的优惠券id
-    
+    const goods_id = this.get('goods_id');
+    const products_id = this.get('products_id');
+    const number = this.get('number');
+
     // 选择的收货地址
     let checkedAddress = null;
-    if (addressId == 0) {
+    if (addressId == null) {
       checkedAddress = await this.model('address').where({
         is_default: 1,
         user_id: think.userId
@@ -251,19 +254,81 @@ module.exports = class extends Base {
       checkedAddress.city_name = await this.model('region').getRegionName(checkedAddress.city_id);
       checkedAddress.district_name = await this.model('region').getRegionName(checkedAddress.district_id);
       checkedAddress.full_region = checkedAddress.province_name + checkedAddress.city_name + checkedAddress.district_name;
-    }else{
+    } else {
       checkedAddress.id = -1;
     }
 
-    // 根据收货地址计算运费
+    // 根据收货地址计算运费（未实现）
     const freightPrice = 0.00;
+    let cartData;
+    let checkedGoodsList;
+    let goodsSepcifitionValue = [];
+    let goodsInfo;
+    let productInfo;
+    let cartInfo;
+    let retail_price;
+    // 获取要购买的商品（获取购物车内checked商品或者直接传值）
+    console.log(goods_id);
+    if (goods_id ==='undefined' || products_id === 'undefined') {
+      cartData = await this.getCart();
+      checkedGoodsList = cartData.cartList.filter(function(v) {
+        return v.checked === 1;
+      });
+    } else {
+      goodsInfo = await this.model('goods').where({id: goods_id}).find();
+      if (think.isEmpty(goodsInfo) || goodsInfo.is_delete === 1) {
+        return this.fail(400, '商品已下架');
+      }
 
-    // 获取要购买的商品
-    const cartData = await this.getCart();
-    const checkedGoodsList = cartData.cartList.filter(function(v) {
-      return v.checked === 1;
-    });
+      // 取得规格的信息,判断规格库存
+      productInfo = await this.model('product').where({goods_id: goods_id, id: products_id}).find();
+      if (think.isEmpty(productInfo) || productInfo.goods_number < number) {
+        return this.fail(400, '库存不足');
+      }
 
+      // 判断购物车中是否存在此规格商品
+      cartInfo = await this.model('cart').where({goods_id: goods_id, product_id: products_id}).find();
+      if (think.isEmpty(cartInfo)) {
+        // 添加操作
+
+        // 添加规格名和值
+        if (!think.isEmpty(productInfo.goods_specification_ids)) {
+          goodsSepcifitionValue = await this.model('goods_specification').where({
+            goods_id: goods_id,
+            id: {'in': productInfo.goods_specification_ids.split('_')}
+          }).getField('value');
+        }
+
+        checkedGoodsList = [{
+          goods_id: goods_id,
+          product_id: products_id,
+          goods_sn: productInfo.goods_sn,
+          goods_name: goodsInfo.name,
+          list_pic_url: goodsInfo.list_pic_url,
+          number: number,
+          session_id: 1,
+          user_id: think.userId,
+          retail_price: productInfo.retail_price,
+          market_price: productInfo.retail_price,
+          goods_specifition_name_value: goodsSepcifitionValue.join(';'),
+          goods_specifition_ids: productInfo.goods_specification_ids,
+          checked: 1
+        }];
+         retail_price = await this.model('goods').getPrice(goods_id, products_id);
+
+        cartData = {
+          cartList: checkedGoodsList,
+          cartTotal: {
+            goodsCount: 1,
+            goodsAmount: retail_price[0].retail_price,
+            checkedGoodsCount: 1,
+            checkedGoodsAmount: retail_price[0].retail_price
+          }
+        };
+      }
+
+
+    }
     // 获取可用的优惠券信息，功能还示实现
     const couponList = await this.model('user_coupon').select();
     const couponPrice = 0.00; // 使用优惠券减免的金额
@@ -285,4 +350,4 @@ module.exports = class extends Base {
       actualPrice: actualPrice
     });
   }
-};
+}

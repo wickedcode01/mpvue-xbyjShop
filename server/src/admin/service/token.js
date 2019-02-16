@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
-const secret = 'SLDLKKDS323ssdd@#@@gf';
+const secret = 'iamrobot';
 
 module.exports = class extends think.Service {
   /**
-   * 根据header中的X-Xbyjshop-Token值获取用户id
+   * 根据header中的admin-Token值获取用户id
    */
   async getUserId() {
     const token = think.token;

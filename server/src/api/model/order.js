@@ -76,9 +76,18 @@ module.exports = class extends think.Model {
       case 0:
         statusText = '未付款';
         break;
+      case 101:
+        statusText ='已取消';
+        break;
+
     }
 
     return statusText;
+  }
+
+  async updateOrderStatus(orderId,orderStatus){
+    const data= await this.where({id:orderId}).limit(1).update({order_status:parseInt(orderStatus)});
+    return data;
   }
 
   /**

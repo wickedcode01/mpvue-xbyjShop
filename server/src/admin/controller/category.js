@@ -1,11 +1,11 @@
 const Base = require('./base.js');
 
 module.exports = class extends Base {
-  /**
-   * index action
-   * @return {Promise} []
-   */
-  async indexAction() {
+  async indexAction(){
+		return this.display();
+	}
+
+  async listAction() {
     const model = this.model('category');
     const data = await model.where({is_show: 1}).order(['sort_order ASC']).select();
     const topCategory = data.filter((item) => {
@@ -24,6 +24,8 @@ module.exports = class extends Base {
     });
     return this.success(categoryList);
   }
+
+
 
   async topCategoryAction() {
     const model = this.model('category');
@@ -47,16 +49,18 @@ module.exports = class extends Base {
 
     const values = this.post();
     const id = this.post('id');
-
+    let returned;
     const model = this.model('category');
     values.is_show = values.is_show ? 1 : 0;
     if (id > 0) {
       await model.where({id: id}).update(values);
+      returned=id;
     } else {
       delete values.id;
-      await model.add(values);
+      returned=await model.add(values);
     }
-    return this.success(values);
+
+    return this.success(returned);
   }
 
   async destoryAction() {
@@ -66,4 +70,11 @@ module.exports = class extends Base {
 
     return this.success();
   }
+
+  async briefAction() {
+    const model=this.model('category');
+    const data =await model.getbriefInfo();
+    return this.success(data);
+  }
+
 };

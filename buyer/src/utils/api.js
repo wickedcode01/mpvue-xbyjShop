@@ -68,6 +68,10 @@ const api = {
   CartAdd: (paramObj) => request.post('cart/add', paramObj, {
     baseURL: ApiRootUrl
   }),
+  // 立即购买
+  buyInstant: (paramObj) => request.post('buy/index', paramObj, {
+    baseURL: ApiRootUrl
+  }),
   // 更新购物车的商品
   CartUpdate: (paramObj) => request.post('cart/update', paramObj, {
     baseURL: ApiRootUrl
@@ -91,6 +95,9 @@ const api = {
   // 提交订单
   OrderSubmit: (paramObj) => request.post('order/submit', paramObj, {
     baseURL: ApiRootUrl
+  }),
+  OrderCancel:(paramObj)=>request.get('order/cancel',paramObj,{
+      baseURL: ApiRootUrl
   }),
   // 收藏列表
   getCollectList: (paramObj) => request.get('collect/list', paramObj, {
@@ -166,10 +173,6 @@ const api = {
   }),
   // 订单详情
   getOrderDetail: (paramObj) => request.get('order/detail', paramObj, {
-    baseURL: ApiRootUrl
-  }),
-  // 取消订单
-  OrderCancel: (r) => request.get('order/cancel', null, {
     baseURL: ApiRootUrl
   }),
   // 物流详情
