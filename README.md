@@ -160,11 +160,5 @@ PM2管理nodejs进程
 Nginx反向代理
 配置HTTPS（微信小程序接口必须是HTTPS）
 ```
->  数据接口： https://www.xuanbiyijue.com/api/
->  具体的步骤，之后有空详细补一篇吧；
 
-
-
-# License
-[GPL]
 
