@@ -21,9 +21,17 @@ module.exports = class extends Base {
     // console.log(length + ' ' + page);
     const orderSn = this.get('orderSn') || '';
     const consignee = this.get('consignee') || '';
-
+    const isNow = this.get('isNow') || 0;
     const model = this.model('order');
-    const data = await model.where({order_sn: ['like', `%${orderSn}%`], consignee: ['like', `%${consignee}%`]}).order(['id DESC']).page(page, length).countSelect();
+    let data;
+    if (isNow === '1') {
+      data = await model.where({order_sn: ['like', `%${orderSn}%`], consignee: ['like', `%${consignee}%`], order_status: ['NOTIN', [101, 102]]}).order(['id DESC']).page(page, length).countSelect();
+      // console.log(isNow);
+    } else {
+      data = await model.where({order_sn: ['like', `%${orderSn}%`], consignee: ['like', `%${consignee}%`]}).order(['id DESC']).page(page, length).countSelect();
+      // console.log(isNow);
+    }
+
     const newList = [];
     for (const item of data.data) {
       item.order_status_text = await this.model('order').getOrderStatusText(item.id);
@@ -73,6 +81,12 @@ module.exports = class extends Base {
 
     // TODO 事务，验证订单是否可删除（只有失效的订单才可以删除）
 
+    return this.success();
+  }
+
+  async cancelAction() {
+    const id = this.get('id');
+    await this.model('order').where({id: id}).limit(1).update({order_status: 101});
     return this.success();
   }
 };

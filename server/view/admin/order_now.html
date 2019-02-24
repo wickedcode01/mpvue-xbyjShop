@@ -70,11 +70,24 @@
 </body>
 {% include "./footer.html" %}
 <script>
-    $(function() {
+
+    $(function () {
         var E = window.wangEditor;
         var editor = new E('.editor');
         editor.create();
-
+        delData = function (id) {
+            $.get('./cancel?id=' + id, function (data) {
+                toastr.success('成功！');
+                table.ajax.reload(false);
+            })
+        }
+        //onclick 在$(function(){})之外必须定义全局函数变量
+        // function delData (id) {
+        //     $.get('./cancel?id=' + id, function (data) {
+        //         toastr.success('成功！');
+        //         table.ajax.reload(false);
+        //     })
+        // }
         $('#myModal').on('hidden.bs.modal', function () {
             $('#myModal .form-control').val('');
             editor.txt.clear();
@@ -88,13 +101,13 @@
             'ordering': false,
             'info': true,
             'autoWidth': true,
-            'ajax': '/admin/order',
+            'ajax': '/admin/order?isNow=1',
             "columns": [
                 {"data": "order_sn"},
                 {"data": "consignee"},
                 {"data": "mobile"},
                 {"data": "address"},
-                {"data":"goods.goods_name"},
+                {"data": "goods.goods_name"},
                 {"data": "order_status_text"},
             ],
             "columnDefs": [{ //设置 编辑按钮
@@ -103,7 +116,7 @@
                 "render": function (data, type, full) {
                     return "<a class='edit' href='javascript:void(0)' edit='" + data +
                         "'data-toggle='modal' data-target='#myModal' >编辑</a>&nbsp;&nbsp;&nbsp;&nbsp;<a class='del' del='" +
-                        data + "'href='javascript:void(0)'>取消</a>";
+                        data + "'href='javascript:void(0)' onclick='delData($(this).attr(\"del\"))'>取消</a>";
                 }
             }],
             "oLanguage": {
@@ -124,15 +137,7 @@
             }, //多语言配置
         });
 
-        //给行绑定选中事件
-        $('#example2 tbody').on('click', 'tr', function() {
-            if ($(this).hasClass('selected')) {
-                $(this).removeClass('selected');
-            } else {
-                table.$('tr.selected').removeClass('selected');
-                $(this).addClass('selected');
-            }
-        });
+
     })
 </script>
 </html>
