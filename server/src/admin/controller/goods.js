@@ -6,13 +6,13 @@ module.exports = class extends Base {
    * @return {Promise} []
    */
 
-  async indexAction(){
+  async indexAction() {
     return this.display();
   }
 
   async listAction() {
     const page = this.get('page') || 1;
-    //const size = this.get('size') || 10;
+    // const size = this.get('size') || 10;
     const name = this.get('name') || '';
 
     const model = this.model('goods');
@@ -21,16 +21,16 @@ module.exports = class extends Base {
     return this.success(data);
   }
 
-  async briefAction(){
-    const length=parseInt(this.get('length'));
-    const page=parseInt(this.get('start')/length)+1||1;
-    const draw=parseInt(this.get('draw'));
-    const model=this.model('goods');
-    const data=await model.field('name,is_on_sale,id,category_id,goods_number,sell_volume,retail_price').page(page,length).countSelect();
-    let data1=data;
-    data1.recordsTotal=data1.count;
-    data1.recordsFiltered=data1.count;
-    data1.draw=draw;
+  async briefAction() {
+    const length = parseInt(this.get('length'));
+    const page = parseInt(this.get('start') / length) + 1 || 1;
+    const draw = parseInt(this.get('draw'));
+    const model = this.model('goods');
+    const data = await model.field('name,is_on_sale,id,category_id,goods_number,sell_volume,retail_price').page(page, length).countSelect();
+    const data1 = data;
+    data1.recordsTotal = data1.count;
+    data1.recordsFiltered = data1.count;
+    data1.draw = draw;
     return this.json(data1);
   }
 
@@ -51,9 +51,9 @@ module.exports = class extends Base {
     const id = this.post('id');
 
     const model = this.model('goods');
-    //values.is_on_sale = values.is_on_sale ? 1 : 0;
-    //values.is_new = values.is_new ? 1 : 0;
-    //values.is_hot = values.is_hot ? 1 : 0;
+    // values.is_on_sale = values.is_on_sale ? 1 : 0;
+    // values.is_new = values.is_new ? 1 : 0;
+    // values.is_hot = values.is_hot ? 1 : 0;
     if (id > 0) {
       await model.where({id: id}).update(values);
     } else {
@@ -71,7 +71,7 @@ module.exports = class extends Base {
     return this.success();
   }
 
-  async addAction(){
+  async addAction() {
     return this.display();
   }
 };

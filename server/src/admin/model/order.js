@@ -80,4 +80,9 @@ module.exports = class extends think.Model {
 
     return statusText;
   }
+  async getGoodsName(orderId) {
+    const model = this.model('order_goods');
+    const data = await model.field('goods_name,goods_specifition_name_value').where({order_id: orderId}).find();
+    return data;
+  }
 };

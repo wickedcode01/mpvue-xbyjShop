@@ -5,21 +5,35 @@ module.exports = class extends Base {
    * index action
    * @return {Promise} []
    */
+
+  async allAction() {
+    return this.display();
+  }
+
+  async nowAction() {
+    return this.display();
+  }
+
   async indexAction() {
-    const page = this.get('page') || 1;
-    const size = this.get('size') || 10;
+    const length = parseInt(this.get('length'));
+    const page = parseInt(this.get('start') / length) + 1 || 1;
+    // const draw = parseInt(this.get('draw'));
+    // console.log(length + ' ' + page);
     const orderSn = this.get('orderSn') || '';
     const consignee = this.get('consignee') || '';
 
     const model = this.model('order');
-    const data = await model.where({order_sn: ['like', `%${orderSn}%`], consignee: ['like', `%${consignee}%`]}).order(['id DESC']).page(page, size).countSelect();
+    const data = await model.where({order_sn: ['like', `%${orderSn}%`], consignee: ['like', `%${consignee}%`]}).order(['id DESC']).page(page, length).countSelect();
     const newList = [];
     for (const item of data.data) {
       item.order_status_text = await this.model('order').getOrderStatusText(item.id);
+      item.goods = await this.model('order').getGoodsName(item.id);
       newList.push(item);
     }
+    data.recordsTotal = data.count;
+    data.recordsFiltered = data.count;
     data.data = newList;
-    return this.success(data);
+    return this.json(data);
   }
 
   async infoAction() {

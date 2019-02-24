@@ -1,9 +1,12 @@
 const Base = require('./base.js');
 
 module.exports = class extends Base {
-  async indexAction(){
-		return this.display();
-	}
+  async indexAction() {
+    return this.display();
+  }
+  async addAction() {
+    return this.display();
+  }
 
   async listAction() {
     const model = this.model('category');
@@ -24,8 +27,6 @@ module.exports = class extends Base {
     });
     return this.success(categoryList);
   }
-
-
 
   async topCategoryAction() {
     const model = this.model('category');
@@ -54,10 +55,10 @@ module.exports = class extends Base {
     values.is_show = values.is_show ? 1 : 0;
     if (id > 0) {
       await model.where({id: id}).update(values);
-      returned=id;
+      returned = id;
     } else {
       delete values.id;
-      returned=await model.add(values);
+      returned = await model.add(values);
     }
 
     return this.success(returned);
@@ -72,9 +73,8 @@ module.exports = class extends Base {
   }
 
   async briefAction() {
-    const model=this.model('category');
-    const data =await model.getbriefInfo();
+    const model = this.model('category');
+    const data = await model.getbriefInfo();
     return this.success(data);
   }
-
 };
