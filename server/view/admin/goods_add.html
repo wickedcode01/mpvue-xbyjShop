@@ -12,7 +12,7 @@
 			<div class="box-body">
 				<div class="form-group">
 					<label for="name">商品名字</label>
-					<input class="form-control" id="title" name="name" placeholder="请输入商品名字">
+					<input class="form-control" id="name" name="name" placeholder="请输入商品名字">
 				</div>
 				<div class="form-group">
 					<label for="name">商品价格</label>
@@ -39,7 +39,7 @@
 				<div class="form-group">
 					<label for="name">是否上架</label>
 					<div class="form-group">
-						<input type="checkbox" id="is_on_sale"> 上架
+						<input type="checkbox" id="is_on_sale" > 上架
 					</div>
 				</div>
 				<div class="form-group">
@@ -64,12 +64,12 @@
 				var name = $("#name").val();
 				var category_id = $("#category").val();
 				var price = $("#price").val();
-				var is_on_sale=$('#is_on_sale').val();
+				var is_on_sale=$('#is_on_sale').is(':checked');
 				var content=editor.txt.html();
 				var goods_number=$('#goods_number').val();
 				$.ajax({
 					type: 'post',
-					url: 'http://127.0.0.1:8360/admin/goods/store',
+					url: '/admin/goods/store',
 					data: {
 						"name": name,
 						"goods_desc": content,
@@ -79,13 +79,13 @@
 						'goods_number':goods_number
 					},
 					success: function(data) {
-							window.location.href = "http://127.0.0.1:8360/admin/goods/index"
+							window.location.href = "/admin/goods/index"
 					},
 					error:function(data){
 						toastr.error('失败！'+data.errmsg);
 					}
 				});
-
+				// console.log(is_on_sale);
 			});
 		})
 	</script>

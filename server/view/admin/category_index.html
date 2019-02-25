@@ -84,7 +84,7 @@
         tableRf(data.data);
       },
       error: function(data) {
-        toastr.error('error' + data);
+        toastr.error('error' + data.errmsg);
       }
     });
   }
@@ -93,7 +93,7 @@
     data = {};
     var table = $('#example2').DataTable({
       'paging': true,
-      'lengthChange': false,
+      'lengthChange': true,
       'searching': true,
       'ordering': true,
       'info': true,
@@ -131,30 +131,23 @@
 
     load();
 
-    $('#example2 tbody').on('click', 'tr', function() {
-      if ($(this).hasClass('selected')) {
-        $(this).removeClass('selected');
-      } else {
-        table.$('tr.selected').removeClass('selected');
-        $(this).addClass('selected');
-      }
-    });
     //删除
-    $('.del').click(function() {
+    $('#example2').on('click','.del',function() {
       $.ajax({
         type: 'post',
-        url: 'http://127.0.0.1:8360/admin/category/del',
+        url: '/admin/category/destory',
         data: {'id': $(this).attr('del')},
         success: function(data) {
-          if (data.succ) {
             alert('删除成功');
-            window.location.reload();
-          } else {
-            alert('删除失败');
-          }
+            window.location.reload(null,false);
+
+        },
+        error:function (err) {
+            alert(err.errmsg);
         }
       });
     });
+
     //编辑
     $('#example2').on('click', '.edit', function() {
       var data1;

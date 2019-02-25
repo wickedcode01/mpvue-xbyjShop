@@ -87,7 +87,7 @@
 			var table = $('#example2').DataTable({
 				'paging': true,
 				"processing": true,
-				'searching': true,
+				'searching': false,
 				'serverSide': true,
 				'ordering': false,
 				'info': true,
@@ -128,15 +128,6 @@
 				}, //多语言配置
 			})
 
-			//给行绑定选中事件
-			$('#example2 tbody').on('click', 'tr', function() {
-				if ($(this).hasClass('selected')) {
-					$(this).removeClass('selected');
-				} else {
-					table.$('tr.selected').removeClass('selected');
-					$(this).addClass('selected');
-				}
-			});
 			//删除
 			$("#example2_wrapper").on('click','.del',function() {
 				$.ajax({
@@ -146,7 +137,7 @@
 						"id": $(this).attr("del")
 					},
 					success: function(data) {
-						table.ajax.reload(false);
+						table.ajax.reload(null,false);
 						toastr.success('删除成功');
 					},
 					error:function(data){
@@ -196,7 +187,7 @@
 					},
 					success: function(data) {
 							toastr.success('成功！');
-							table.ajax.reload(false);
+							table.ajax.reload(null,false);
 						$('#myModal').modal('hide');
 					},
 					error:function(data){
