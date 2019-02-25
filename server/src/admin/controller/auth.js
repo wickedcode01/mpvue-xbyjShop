@@ -20,23 +20,22 @@ module.exports = class extends Base {
       last_login_ip: this.ctx.ip
     });
 
+    // const TokenSerivce = this.service('token', 'admin');
+    // const sessionKey = await TokenSerivce.create({
+    //   user_id: admin.id
+    // });
+    //
+    // if (think.isEmpty(sessionKey)) {
+    //   return this.fail('登录失败');
+    // }
 
-    /*const TokenSerivce = this.service('token', 'admin');
-    const sessionKey = await TokenSerivce.create({
-      user_id: admin.id
-    });
-
-    if (think.isEmpty(sessionKey)) {
-      return this.fail('登录失败');
-    }
-	*/
     const userInfo = {
       id: admin.id,
       username: admin.username,
       avatar: admin.avatar,
       admin_role_id: admin.admin_role_id
     };
-		await this.session('userinfo',userInfo);
+    await this.session('userinfo', userInfo);
     this.redirect('/admin/index/index');
   }
 };
