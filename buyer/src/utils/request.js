@@ -22,8 +22,8 @@ request.interceptors.response.use(
   (err, promise) => {
     wx.hideNavigationBarLoading()
     wx.showToast({
-      title: err.message,
-      icon: 'none'
+      title: '服务器错误',
+      image: '/static/images/icon_error.png'
     })
     return promise.resolve()
   }

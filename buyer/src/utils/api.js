@@ -96,8 +96,8 @@ const api = {
   OrderSubmit: (paramObj) => request.post('order/submit', paramObj, {
     baseURL: ApiRootUrl
   }),
-  OrderCancel:(paramObj)=>request.get('order/cancel',paramObj,{
-      baseURL: ApiRootUrl
+  OrderCancel: (paramObj) => request.get('order/cancel', paramObj, {
+    baseURL: ApiRootUrl
   }),
   // 收藏列表
   getCollectList: (paramObj) => request.get('collect/list', paramObj, {

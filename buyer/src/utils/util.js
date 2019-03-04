@@ -160,6 +160,20 @@ function showErrorToast (msg) {
   })
 }
 
+function refreshEnd (isSucc) {
+  if (isSucc) {
+    wx.showToast({
+      title: '刷新成功'
+    })
+    wx.stopPullDownRefresh();
+  } else {
+    wx.showToast({
+      title: '刷新失败',
+      image: '/static/images/icon_error.png'
+    })
+    wx.stopPullDownRefresh();
+  }
+}
 const util = {
   formatTime,
   request,
@@ -167,7 +181,8 @@ const util = {
   showErrorToast,
   checkSession,
   login,
-  getUserInfo
+  getUserInfo,
+  refreshEnd
 }
 
 export default util

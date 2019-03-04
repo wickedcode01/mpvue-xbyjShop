@@ -29,9 +29,14 @@ const store = new Vuex.Store({
   actions: {
     async getIndexData ({ commit }) {
       const res = await api.getIndexData()
-      // console.log('vuex取首页的数据getIndexData', res)
-      if (res.errno !== 0) return
+
+      if (res === undefined || res.errno !== 0) {
+        // console.log(res);
+        return 0
+      }
+      // console.log(res)
       commit('getIndexData', res)
+      return 1
     }
   }
 })

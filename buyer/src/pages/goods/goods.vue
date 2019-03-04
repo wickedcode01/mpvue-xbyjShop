@@ -161,342 +161,348 @@
     import api from '@/utils/api'
     import wx from 'wx';
     import wxParse from 'mpvue-wxparse'
-
+    import util from '@/utils/util'
     export default {
-        components: {
-            wxParse
-        },
-        data() {
-            return {
-                id: 0,
-                goods: {},
-                gallery: [{
-                    img_url: ''
-                }],
-                attribute: [],
-                issueList: [],
-                comment: [],
-                brand: {},
-                specificationList: [],
-                productList: [],
-                relatedGoods: [],
-                cartGoodsCount: 0,
-                userHasCollect: 0,
-                number: 1,
-                checkedSpecspan: '请选择规格数量',
-                openAttr: false,
-                noCollectImage: '/static/images/icon_collect.png',
-                hasCollectImage: '/static/images/icon_collect_checked.png',
-                collectBackImage: '/static/images/icon_collect.png',
-                goodDetailHTMLstr: ''
-            }
-        },
-        async mounted() {
-            if (this.$route.query.id) {
-                this.id = parseInt(this.$route.query.id);
-            }
-            await Promise.all([
-                this.getGoodsInfo()
-            ]);
-            const res = await api.getCartGoodsCount();
-            // console.log('购物车商品数量,请求结果', res);
-            if (res.errno === 0) {
-                this.cartGoodsCount = res.data.cartTotal.goodsCount;
-            }
-        },
-        methods: {
-            // 获取商品详情
-            async getGoodsInfo() {
-                const res = await api.getGoodsDetail({
-                    id: this.id
-                });
-                // console.log('商品详情,请求结果', res);
-                if (res.errno === 0) {
-                    this.goods = res.data.info;
-                    this.gallery = res.data.gallery.length > 0 ? res.data.gallery : [{
-                        img_url: '/static/images/icon_error.png'
-                    }];
-                    this.attribute = res.data.attribute;
-                    this.issueList = res.data.issue;
-                    this.comment = res.data.comment;
-                    this.brand = res.data.brand;
-                    this.specificationList = res.data.specificationList;
-                    this.productList = res.data.productList;
-                    this.userHasCollect = res.data.userHasCollect;
-                    if (res.data.userHasCollect === 1) {
-                        this.collectBackImage = this.hasCollectImage;
-                    } else {
-                        this.collectBackImage = this.noCollectImage;
-                    }
-                    // wxParse的内容
-                    this.goodDetailHTMLstr = res.data.info.goods_desc ? res.data.info.goods_desc : '暂无详情数据';
-                    // 取“相关商品推荐”信息
-                    this.getGoodsRelated();
-                }
-            },
-            // 获得“相关商品推荐”信息
-            async getGoodsRelated() {
-                const res = await api.getGoodsRelated({
-                    id: this.id
-                });
-                // console.log('相关商品推荐', res);
-                if (res.errno === 0) {
-                    this.relatedGoods = res.data.goodsList;
-                }
-            },
-            // 规格弹窗中，每个规则项的点击事件
-            clickSkuValue(event) {
-                let specNameId = event.currentTarget.dataset.nameId;
-                let specValueId = event.currentTarget.dataset.valueId;
-                // 判断是否可以点击
-                // TODO 性能优化，可在v-for中添加index，可以直接获取点击的属性名和属性值，不用循环
-                let _specificationList = this.specificationList;
-                for (let i = 0; i < _specificationList.length; i++) {
-                    if (_specificationList[i].specification_id === specNameId) {
-                        for (let j = 0; j < _specificationList[i].valueList.length; j++) {
-                            if (_specificationList[i].valueList[j].id === specValueId) {
-                                // 如果已经选中，则反选
-                                if (_specificationList[i].valueList[j].checked) {
-                                    _specificationList[i].valueList[j].checked = false;
-                                } else {
-                                    _specificationList[i].valueList[j].checked = true;
-                                }
-                            } else {
-                                _specificationList[i].valueList[j].checked = false;
-                            }
-                        }
-                    }
-                }
-                this.specificationList = _specificationList;
-                // 重新计算spec改变后的信息
-                this.changeSpecInfo();
-                // 重新计算哪些值不可以点击
-            },
-            // 获取选中的规格信息,存到数组中，其他方法有3处调用
-            getCheckedSpecValue() {
-                let checkedValues = [];
-                let _specificationList = this.specificationList;
-                for (let i = 0; i < _specificationList.length; i++) {
-                    let _checkedObj = {
-                        nameId: _specificationList[i].specification_id,
-                        valueId: 0,
-                        valuespan: ''
-                    };
-                    for (let j = 0; j < _specificationList[i].valueList.length; j++) {
-                        if (_specificationList[i].valueList[j].checked) {
-                            _checkedObj.valueId = _specificationList[i].valueList[j].id;
-                            _checkedObj.valuespan = _specificationList[i].valueList[j].value;
-                        }
-                    }
-                    checkedValues.push(_checkedObj);
-                }
-                // console.log(checkedValues);
-                return checkedValues;
-            },
-            // 根据已选的值，计算其它值的状态
-            setSpecValueStatus() {
-
-            },
-            // 判断规格是否选择完整(每一种至少选择一项)，加入购物车前进行判断
-            isCheckedAllSpec() {
-                return !this.getCheckedSpecValue().some(function(v) {
-                    if (v.valueId === 0) {
-                        return true;
-                    }
-                });
-            },
-            // 拿到规格的key，库存判断时调用
-            getCheckedSpecKey() {
-                let checkedValue = this.getCheckedSpecValue().map(function(v) {
-                    return v.valueId;
-                });
-                // console.log('getCheckedSpecKey', checkedValue.join('_'));
-                return checkedValue.join('_');
-            },
-            // 每次点击规格项，重新计算规格的信息
-            changeSpecInfo() {
-                let checkedNameValue = this.getCheckedSpecValue();
-                // 设置选择的信息
-                let checkedValue = checkedNameValue.filter(function(v) {
-                    if (v.valueId !== 0) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }).map(function(v) {
-                    return v.valuespan;
-                });
-                if (checkedValue.length > 0) {
-                    this.checkedSpecspan = checkedValue.join('　');
-                } else {
-                    this.checkedSpecspan = '请选择规格数量';
-                }
-            },
-            // 判断库存时调用，key是计算我们选择的规则，类似1_3_7
-            getCheckedProductItem(key) {
-                // console.log('this.data.productList', this.data.productList);
-                return this.productList.filter(function(v) {
-                    if (v.goods_specification_ids === key) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                });
-            },
-            // 打开商品规格选择弹窗
-            switchAttrPop() {
-                if (this.openAttr === false) {
-                    this.openAttr = !this.openAttr;
-                }
-            },
-            // 关闭规格弹窗
-            closeAttr() {
-                this.openAttr = false;
-            },
-            // 购物车的五角星，添加或是取消收藏
-            async addCannelCollect() {
-                const res = await api.CollectAddOrDelete({
-                    typeId: 0,
-                    valueId: this.id
-                });
-                // console.log('添加或取消收藏', res);
-                if (res.errno === 0) {
-                    if (res.data.type === 'add') {
-                        this.collectBackImage = this.hasCollectImage;
-                    } else {
-                        this.collectBackImage = this.noCollectImage;
-                    }
-                } else {
-                    wx.showToast({
-                        image: '/static/images/icon_error.png',
-                        title: res.errmsg,
-                        mask: true
-                    });
-                }
-            },
-            // 跳转到购物车页面
-            openCartPage() {
-                wx.switchTab({
-                    url: '/pages/cart/cart'
-                });
-            },
-            // 加入购物车，多种判断哦~
-            async addToCart() {
-                if (this.openAttr === false) {
-                    // 打开规格选择弹窗
-                    this.openAttr = !this.openAttr;
-                } else {
-                    // 提示选择完整规格
-                    if (!this.isCheckedAllSpec()) {
-                        wx.showToast({
-                            image: '/static/images/icon_error.png',
-                            title: '规格选择不完整',
-                            mask: true
-                        });
-                        return false;
-                    }
-                    // 根据选中的规格，判断是否有对应的sku信息
-                    let checkedProduct = this.getCheckedProductItem(this.getCheckedSpecKey());
-                    // console.log('checkedProduct', checkedProduct);
-                    // 验证商品型号
-                    if (!checkedProduct || checkedProduct.length <= 0) {
-                        // 提示没有库存
-                        wx.showToast({
-                            image: '/static/images/icon_error.png',
-                            title: '库存型号不足',
-                            mask: true
-                        });
-                        return false;
-                    }
-                    // 验证商品数量
-                    if (checkedProduct.goods_number < this.number) {
-                        wx.showToast({
-                            image: '/static/images/icon_error.png',
-                            title: '库存数量不足',
-                            mask: true
-                        });
-                        return false;
-                    }
-                    // 添加到购物车
-                    const res = await api.CartAdd({
-                        goodsId: this.goods.id,
-                        number: this.number,
-                        productId: checkedProduct[0].id
-                    });
-                    // console.log('添加到购物车，请求结果', res);
-                    if (res.errno === 0) {
-                        wx.showToast({
-                            title: '添加成功'
-                        });
-                        this.openAttr = !this.openAttr;
-                        this.cartGoodsCount = res.data.cartTotal.goodsCount;
-                    } else {
-                        wx.showToast({
-                            image: '/static/images/icon_error.png',
-                            title: res.errmsg,
-                            mask: true
-                        });
-                    }
-                }
-            },
-            // 立即购买
-            async buyInstant() {
-                if (this.openAttr === false) {
-                    this.openAttr = !this.openAttr;
-                } else {
-                    if (!this.isCheckedAllSpec()) {
-                        wx.showToast({
-                            image: '/static/images/icon_error.png',
-                            title: '规格选择不完整',
-                            mask: true
-                        });
-                        return false;
-                    }
-                    // 根据选中的规格，判断是否有对应的sku信息
-                    let checkedProduct = this.getCheckedProductItem(this.getCheckedSpecKey());
-                    // console.log('checkedProduct', checkedProduct);
-                    // 验证商品型号
-                    if (!checkedProduct || checkedProduct.length <= 0) {
-                        // 提示没有库存
-                        wx.showToast({
-                            image: '/static/images/icon_error.png',
-                            title: '库存型号不足',
-                            mask: true
-                        });
-                        return false;
-                    }
-                    // 验证商品数量
-                    if (checkedProduct.goods_number < this.number) {
-                        wx.showToast({
-                            image: '/static/images/icon_error.png',
-                            title: '库存数量不足',
-                            mask: true
-                        });
-                        return false;
-                    }
-                    wx.navigateTo({
-                        url: '../shopping/checkout?id=' + this.goods.id + '&number=' + this.number +
-                            '&productId=' + checkedProduct[0].id+'&isBuy=1'
-                    })
-                }
-            },
-            // 减少数量
-            cutNumber() {
-                this.number = (this.number - 1 > 1) ? this.number - 1 : 1;
-            },
-            // 增加数量
-            addNumber() {
-                this.number = this.number + 1;
-            },
-            // 原生的分享功能
-            onShareAppMessage: function() {
-                return {
-                    title: 'xbyjShop',
-                    desc: '仿网易严选小程序商城',
-                    path: '/pages/goods/goods'
-                }
-            }
+      components: {
+        wxParse
+      },
+      data () {
+        return {
+          id: 0,
+          goods: {},
+          gallery: [{
+            img_url: ''
+          }],
+          attribute: [],
+          issueList: [],
+          comment: [],
+          brand: {},
+          specificationList: [],
+          productList: [],
+          relatedGoods: [],
+          cartGoodsCount: 0,
+          userHasCollect: 0,
+          number: 1,
+          checkedSpecspan: '请选择规格数量',
+          openAttr: false,
+          noCollectImage: '/static/images/icon_collect.png',
+          hasCollectImage: '/static/images/icon_collect_checked.png',
+          collectBackImage: '/static/images/icon_collect.png',
+          goodDetailHTMLstr: ''
         }
+      },
+      async onPullDownRefresh () {
+        const sign = await this.getGoodsInfo();
+        util.refreshEnd(sign);
+      },
+      async mounted () {
+        if (this.$route.query.id) {
+          this.id = parseInt(this.$route.query.id);
+        }
+        await Promise.all([
+          this.getGoodsInfo()
+        ]);
+        const res = await api.getCartGoodsCount();
+        // console.log('购物车商品数量,请求结果', res);
+        if (res.errno === 0) {
+          this.cartGoodsCount = res.data.cartTotal.goodsCount;
+        }
+      },
+      methods: {
+        // 获取商品详情
+        async getGoodsInfo () {
+          const res = await api.getGoodsDetail({
+            id: this.id
+          });
+          // console.log('商品详情,请求结果', res);
+          if (res.errno === 0) {
+            this.goods = res.data.info;
+            this.gallery = res.data.gallery.length > 0 ? res.data.gallery : [{
+              img_url: '/static/images/icon_error.png'
+            }];
+            this.attribute = res.data.attribute;
+            this.issueList = res.data.issue;
+            this.comment = res.data.comment;
+            this.brand = res.data.brand;
+            this.specificationList = res.data.specificationList;
+            this.productList = res.data.productList;
+            this.userHasCollect = res.data.userHasCollect;
+            if (res.data.userHasCollect === 1) {
+              this.collectBackImage = this.hasCollectImage;
+            } else {
+              this.collectBackImage = this.noCollectImage;
+            }
+            // wxParse的内容
+            this.goodDetailHTMLstr = res.data.info.goods_desc ? res.data.info.goods_desc : '暂无详情数据';
+            // 取“相关商品推荐”信息
+            this.getGoodsRelated();
+            return 1;
+          }
+          return 0
+        },
+        // 获得“相关商品推荐”信息
+        async getGoodsRelated () {
+          const res = await api.getGoodsRelated({
+            id: this.id
+          });
+          // console.log('相关商品推荐', res);
+          if (res.errno === 0) {
+            this.relatedGoods = res.data.goodsList;
+          }
+        },
+        // 规格弹窗中，每个规则项的点击事件
+        clickSkuValue (event) {
+          let specNameId = event.currentTarget.dataset.nameId;
+          let specValueId = event.currentTarget.dataset.valueId;
+          // 判断是否可以点击
+          // TODO 性能优化，可在v-for中添加index，可以直接获取点击的属性名和属性值，不用循环
+          let _specificationList = this.specificationList;
+          for (let i = 0; i < _specificationList.length; i++) {
+            if (_specificationList[i].specification_id === specNameId) {
+              for (let j = 0; j < _specificationList[i].valueList.length; j++) {
+                if (_specificationList[i].valueList[j].id === specValueId) {
+                  // 如果已经选中，则反选
+                  if (_specificationList[i].valueList[j].checked) {
+                    _specificationList[i].valueList[j].checked = false;
+                  } else {
+                    _specificationList[i].valueList[j].checked = true;
+                  }
+                } else {
+                  _specificationList[i].valueList[j].checked = false;
+                }
+              }
+            }
+          }
+          this.specificationList = _specificationList;
+          // 重新计算spec改变后的信息
+          this.changeSpecInfo();
+          // 重新计算哪些值不可以点击
+        },
+        // 获取选中的规格信息,存到数组中，其他方法有3处调用
+        getCheckedSpecValue () {
+          let checkedValues = [];
+          let _specificationList = this.specificationList;
+          for (let i = 0; i < _specificationList.length; i++) {
+            let _checkedObj = {
+              nameId: _specificationList[i].specification_id,
+              valueId: 0,
+              valuespan: ''
+            };
+            for (let j = 0; j < _specificationList[i].valueList.length; j++) {
+              if (_specificationList[i].valueList[j].checked) {
+                _checkedObj.valueId = _specificationList[i].valueList[j].id;
+                _checkedObj.valuespan = _specificationList[i].valueList[j].value;
+              }
+            }
+            checkedValues.push(_checkedObj);
+          }
+          // console.log(checkedValues);
+          return checkedValues;
+        },
+        // 根据已选的值，计算其它值的状态
+        setSpecValueStatus () {
+
+        },
+        // 判断规格是否选择完整(每一种至少选择一项)，加入购物车前进行判断
+        isCheckedAllSpec () {
+          return !this.getCheckedSpecValue().some(function (v) {
+            if (v.valueId === 0) {
+              return true;
+            }
+          });
+        },
+        // 拿到规格的key，库存判断时调用
+        getCheckedSpecKey () {
+          let checkedValue = this.getCheckedSpecValue().map(function (v) {
+            return v.valueId;
+          });
+          // console.log('getCheckedSpecKey', checkedValue.join('_'));
+          return checkedValue.join('_');
+        },
+        // 每次点击规格项，重新计算规格的信息
+        changeSpecInfo () {
+          let checkedNameValue = this.getCheckedSpecValue();
+          // 设置选择的信息
+          let checkedValue = checkedNameValue.filter(function (v) {
+            if (v.valueId !== 0) {
+              return true;
+            } else {
+              return false;
+            }
+          }).map(function (v) {
+            return v.valuespan;
+          });
+          if (checkedValue.length > 0) {
+            this.checkedSpecspan = checkedValue.join('　');
+          } else {
+            this.checkedSpecspan = '请选择规格数量';
+          }
+        },
+        // 判断库存时调用，key是计算我们选择的规则，类似1_3_7
+        getCheckedProductItem (key) {
+          // console.log('this.data.productList', this.data.productList);
+          return this.productList.filter(function (v) {
+            if (v.goods_specification_ids === key) {
+              return true;
+            } else {
+              return false;
+            }
+          });
+        },
+        // 打开商品规格选择弹窗
+        switchAttrPop () {
+          if (this.openAttr === false) {
+            this.openAttr = !this.openAttr;
+          }
+        },
+        // 关闭规格弹窗
+        closeAttr () {
+          this.openAttr = false;
+        },
+        // 购物车的五角星，添加或是取消收藏
+        async addCannelCollect () {
+          const res = await api.CollectAddOrDelete({
+            typeId: 0,
+            valueId: this.id
+          });
+          // console.log('添加或取消收藏', res);
+          if (res.errno === 0) {
+            if (res.data.type === 'add') {
+              this.collectBackImage = this.hasCollectImage;
+            } else {
+              this.collectBackImage = this.noCollectImage;
+            }
+          } else {
+            wx.showToast({
+              image: '/static/images/icon_error.png',
+              title: res.errmsg,
+              mask: true
+            });
+          }
+        },
+        // 跳转到购物车页面
+        openCartPage () {
+          wx.switchTab({
+            url: '/pages/cart/cart'
+          });
+        },
+        // 加入购物车，多种判断哦~
+        async addToCart () {
+          if (this.openAttr === false) {
+            // 打开规格选择弹窗
+            this.openAttr = !this.openAttr;
+          } else {
+            // 提示选择完整规格
+            if (!this.isCheckedAllSpec()) {
+              wx.showToast({
+                image: '/static/images/icon_error.png',
+                title: '规格选择不完整',
+                mask: true
+              });
+              return false;
+            }
+            // 根据选中的规格，判断是否有对应的sku信息
+            let checkedProduct = this.getCheckedProductItem(this.getCheckedSpecKey());
+            // console.log('checkedProduct', checkedProduct);
+            // 验证商品型号
+            if (!checkedProduct || checkedProduct.length <= 0) {
+              // 提示没有库存
+              wx.showToast({
+                image: '/static/images/icon_error.png',
+                title: '库存型号不足',
+                mask: true
+              });
+              return false;
+            }
+            // 验证商品数量
+            if (checkedProduct.goods_number < this.number) {
+              wx.showToast({
+                image: '/static/images/icon_error.png',
+                title: '库存数量不足',
+                mask: true
+              });
+              return false;
+            }
+            // 添加到购物车
+            const res = await api.CartAdd({
+              goodsId: this.goods.id,
+              number: this.number,
+              productId: checkedProduct[0].id
+            });
+            // console.log('添加到购物车，请求结果', res);
+            if (res.errno === 0) {
+              wx.showToast({
+                title: '添加成功'
+              });
+              this.openAttr = !this.openAttr;
+              this.cartGoodsCount = res.data.cartTotal.goodsCount;
+            } else {
+              wx.showToast({
+                image: '/static/images/icon_error.png',
+                title: res.errmsg,
+                mask: true
+              });
+            }
+          }
+        },
+        // 立即购买
+        async buyInstant () {
+          if (this.openAttr === false) {
+            this.openAttr = !this.openAttr;
+          } else {
+            if (!this.isCheckedAllSpec()) {
+              wx.showToast({
+                image: '/static/images/icon_error.png',
+                title: '规格选择不完整',
+                mask: true
+              });
+              return false;
+            }
+            // 根据选中的规格，判断是否有对应的sku信息
+            let checkedProduct = this.getCheckedProductItem(this.getCheckedSpecKey());
+            // console.log('checkedProduct', checkedProduct);
+            // 验证商品型号
+            if (!checkedProduct || checkedProduct.length <= 0) {
+              // 提示没有库存
+              wx.showToast({
+                image: '/static/images/icon_error.png',
+                title: '库存型号不足',
+                mask: true
+              });
+              return false;
+            }
+            // 验证商品数量
+            if (checkedProduct.goods_number < this.number) {
+              wx.showToast({
+                image: '/static/images/icon_error.png',
+                title: '库存数量不足',
+                mask: true
+              });
+              return false;
+            }
+            wx.navigateTo({
+              url: '../shopping/checkout?id=' + this.goods.id + '&number=' + this.number +
+                            '&productId=' + checkedProduct[0].id + '&isBuy=1'
+            })
+          }
+        },
+        // 减少数量
+        cutNumber () {
+          this.number = (this.number - 1 > 1) ? this.number - 1 : 1;
+        },
+        // 增加数量
+        addNumber () {
+          this.number = this.number + 1;
+        },
+        // 原生的分享功能
+        onShareAppMessage: function () {
+          return {
+            title: 'xbyjShop',
+            desc: '仿网易严选小程序商城',
+            path: '/pages/goods/goods'
+          }
+        }
+      }
     }
 </script>
 

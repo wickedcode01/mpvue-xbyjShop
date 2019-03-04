@@ -128,7 +128,7 @@
 <script>
 // import api from '@/utils/api'
 import { mapState, mapActions } from 'vuex'
-
+import util from '@/utils/util.js'
 export default {
   computed: {
     ...mapState([
@@ -141,10 +141,13 @@ export default {
       'channel'
     ])
   },
+  async onPullDownRefresh () {
+    const sign = await this.getIndexData();
+    util.refreshEnd(sign);
+  },
+
   async mounted () {
-    await Promise.all([
-      this.getIndexData()
-    ])
+    this.getIndexData();
   },
 
   methods: {
