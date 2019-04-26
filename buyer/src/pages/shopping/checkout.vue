@@ -24,17 +24,6 @@
             </view>
         </view>
 
-        <view class="coupon-box">
-            <view class="coupon-item">
-                <view class="l">
-                    <text class="name">请选择优惠券</text>
-                    <text class="txt">{{couponList.length}}张</text>
-                </view>
-                <view class="r">
-                    <image src="/static/images/address_right.png" />
-                </view>
-            </view>
-        </view>
 
         <view class="order-box">
             <view class="order-item">
@@ -53,14 +42,7 @@
                     <text class="txt">￥{{freightPrice}}</text>
                 </view>
             </view>
-            <view class="order-item no-border">
-                <view class="l">
-                    <text class="name">优惠券</text>
-                </view>
-                <view class="r">
-                    <text class="txt">-￥{{couponPrice}}</text>
-                </view>
-            </view>
+
         </view>
 
         <view class="goods-items">
@@ -93,123 +75,122 @@
     import pay from '@/services/pay'
 
     export default {
-        data() {
-            return {
-                checkedGoodsList: [],
-                checkedAddress: {},
-                checkedCoupon: [],
-                couponList: [],
-                goodsTotalPrice: 0.00, // 商品总价
-                freightPrice: 0.00, // 快递费
-                couponPrice: 0.00, // 优惠券的价格
-                orderTotalPrice: 0.00, // 订单总价
-                actualPrice: 0.00, // 实际需要支付的总价
-                addressId: 0, // 地址ID
-                couponId: 0,
-                isBuy:0,// 优惠卷ID
-            }
-        },
-        async mounted() {
-            try {
-                // 从缓存中取addressId和couponId，默认都是0
-                var addressId = wx.getStorageSync('addressId');
-                // console.log('缓存的地址Id', addressId);
-                if (addressId) {
-                    this.addressId = addressId;
-                }
-                var couponId = wx.getStorageSync('couponId');
-                if (couponId) {
-                    this.couponId = couponId;
-                }
-            } catch (e) {
-                // Do something when catch error
-            }
-            await Promise.all([
-                this.getCheckoutInfo()
-            ])
-        },
-        methods: {
-            // 获取订单信息
-            async getCheckoutInfo() {
-                const data = await this.$root.$mp.query;
-                const res = await api.CartCheckout({
-                    addressId: this.addressId,
-                    couponId: this.couponId,
-                    goods_id: data.id,
-                    products_id: data.productId,
-                    number: data.number
-                });
-
-                if (res.errno === 0) {
-                    // console.log(res.data);
-                    this.checkedGoodsList = res.data.checkedGoodsList;
-                    this.checkedAddress = res.data.checkedAddress;
-                    this.actualPrice = res.data.actualPrice;
-                    this.checkedCoupon = res.data.checkedCoupon;
-                    this.couponList = res.data.couponList;
-                    this.couponPrice = res.data.couponPrice;
-                    this.freightPrice = res.data.freightPrice;
-                    this.goodsTotalPrice = res.data.goodsTotalPrice;
-                    this.orderTotalPrice = res.data.orderTotalPrice;
-                    this.isBuy=data.isBuy;
-                }
-            },
-            // 选择收获地址
-            selectAddress() {
-                wx.navigateTo({
-                    url: '../shopping/address'
-                })
-            },
-            // 添加收获地址
-            addAddress() {
-                wx.navigateTo({
-                    url: '../shopping/addressAdd'
-                })
-            },
-            // 点击“去付款”
-            async submitOrder() {
-                console.log(1);
-                const data = await this.$root.$mp.query;
-                if (this.addressId <= 0) {
-                    console.log(2)
-                    util.showErrorToast('请选择收货地址');
-                    return false;
-                };
-                // 请求后台，更新数据库的order表，清空购物车表等
-                if (this.isBuy) {
-                    console.log(this.isBuy);
-                    res = await api.buyInstant({
-                        addressId: this.addressId,
-                        couponId: this.couponId,
-                        goodsId: data.id,
-                        productsId: data.productId,
-                        number: data.number
-                    });
-                } else {
-                    res = await api.OrderSubmit({
-                        addressId: this.addressId,
-                        couponId: this.couponId
-                    });
-                }
-
-                // 数据库操作成功，再调用wx的支付服务
-                 if (res.errno === 0) {
-                   const orderId = res.data.orderInfo.id;
-                   pay.payOrder(parseInt(orderId)).then(res => {
-                       wx.redirectTo({
-                           url: '../pay/payResult?status=1&orderId=' + orderId
-                       });
-                   }).catch(res => {
-                       wx.redirectTo({
-                           url: '../pay/payResult?status=0&orderId=' + orderId
-                       });
-                   });
-               } else {
-                   util.showErrorToast('下单失败');
-               }
-
-            }
+      data () {
+        return {
+          checkedGoodsList: [],
+          checkedAddress: {},
+          checkedCoupon: [],
+          couponList: [],
+          goodsTotalPrice: 0.00, // 商品总价
+          freightPrice: 0.00, // 快递费
+          couponPrice: 0.00, // 优惠券的价格
+          orderTotalPrice: 0.00, // 订单总价
+          actualPrice: 0.00, // 实际需要支付的总价
+          addressId: 0, // 地址ID
+          couponId: 0,
+          isBuy: 0// 优惠卷ID
         }
+      },
+      async mounted () {
+        try {
+          // 从缓存中取addressId和couponId，默认都是0
+          var addressId = wx.getStorageSync('addressId');
+          // console.log('缓存的地址Id', addressId);
+          if (addressId) {
+            this.addressId = addressId;
+          }
+          var couponId = wx.getStorageSync('couponId');
+          if (couponId) {
+            this.couponId = couponId;
+          }
+        } catch (e) {
+          // Do something when catch error
+        }
+        await Promise.all([
+          this.getCheckoutInfo()
+        ])
+      },
+      methods: {
+        // 获取订单信息
+        async getCheckoutInfo () {
+          const data = await this.$root.$mp.query;
+          const res = await api.CartCheckout({
+            addressId: this.addressId,
+            couponId: this.couponId,
+            goods_id: data.id,
+            products_id: data.productId,
+            number: data.number
+          });
+
+          if (res.errno === 0) {
+            // console.log(res.data);
+            this.checkedGoodsList = res.data.checkedGoodsList;
+            this.checkedAddress = res.data.checkedAddress;
+            this.actualPrice = res.data.actualPrice;
+            this.checkedCoupon = res.data.checkedCoupon;
+            this.couponList = res.data.couponList;
+            this.couponPrice = res.data.couponPrice;
+            this.freightPrice = res.data.freightPrice;
+            this.goodsTotalPrice = res.data.goodsTotalPrice;
+            this.orderTotalPrice = res.data.orderTotalPrice;
+            this.isBuy = data.isBuy;
+          }
+        },
+        // 选择收获地址
+        selectAddress () {
+          wx.navigateTo({
+            url: '../shopping/address'
+          })
+        },
+        // 添加收获地址
+        addAddress () {
+          wx.navigateTo({
+            url: '../shopping/address'
+          })
+        },
+        // 点击“去付款”
+        async submitOrder () {
+          // console.log(1);
+          const data = await this.$root.$mp.query;
+          if (this.addressId <= 0) {
+            // console.log(2)
+            util.showErrorToast('请选择收货地址');
+            return false;
+          };
+          // 请求后台，更新数据库的order表，清空购物车表等
+          if (this.isBuy) {
+            console.log(this.isBuy);
+            res = await api.buyInstant({
+              addressId: this.addressId,
+              couponId: this.couponId,
+              goodsId: data.id,
+              productsId: data.productId,
+              number: data.number
+            });
+          } else {
+            res = await api.OrderSubmit({
+              addressId: this.addressId,
+              couponId: this.couponId
+            });
+          }
+
+          // 数据库操作成功，再调用wx的支付服务
+          if (res.errno === 0) {
+            const orderId = res.data.orderInfo.id;
+            pay.payOrder(parseInt(orderId)).then(res => {
+              wx.redirectTo({
+                url: '../pay/payResult?status=1&orderId=' + orderId
+              });
+            }).catch(res => {
+              wx.redirectTo({
+                url: '../pay/payResult?status=0&orderId=' + orderId
+              });
+            });
+          } else {
+            util.showErrorToast('下单失败');
+          }
+        }
+      }
     }
 </script>
 

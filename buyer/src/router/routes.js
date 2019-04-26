@@ -34,7 +34,7 @@ module.exports = [
     path: 'pages/ucenter/index',
     name: 'ucenter',
     config: {
-      enablePullDownRefresh: true,
+      enablePullDownRefresh: false,
       navigationBarTitleText: '个人中心'
     }
   },

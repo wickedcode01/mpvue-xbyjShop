@@ -15,10 +15,11 @@ app.$mount()
 export default {
   config: {
     pages: [
-      '^pages/index/index',
+      'pages/index/index',
       'pages/goods/goods',
       'pages/cart/cart',
-      'pages/shopping/checkout'
+      'pages/shopping/checkout',
+      'pages/shopping/address'
     ], // Will be filled in webpack
     window: {
       backgroundTextStyle: 'dark',
